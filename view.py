@@ -4,7 +4,7 @@ class View:
     INPUT_LAST_NAME = "Enter last name.\n"
     INPUT_PHONE_NUMBER = "Enter phone number.\n"
 
-    def pb_print(self, res):
+    def pb_output(self, res):
         if isinstance(res, (list, tuple)):
             for i in res:
                 print(i)
@@ -12,7 +12,12 @@ class View:
             print(res)
         elif isinstance(res, Exception):
             print(self.ERROR_FORMAT.format(res))
-            raise res
+            # raise res
+
+    @staticmethod
+    def pb_input(msg):
+        res = input(msg)
+        return res
 
     def new_elements(self):
         first_name = input(self.INPUT_FIRST_NAME)
@@ -23,9 +28,3 @@ class View:
         if not phone_number.isdigit():
             raise TypeError("Phone number must be a integer.")
         return first_name, last_name, phone_number
-
-    @staticmethod
-    def choose_id(msg, res):
-        selected_id = input(msg)
-        r = [x for x in res if selected_id and selected_id in x[5:7]]
-        return selected_id if r else 'ID "{}" is not in the search result.'.format(selected_id)

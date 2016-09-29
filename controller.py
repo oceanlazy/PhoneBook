@@ -1,73 +1,80 @@
-from model import PhoneBookModel
+from model import Model
 from view import View
-from utility import save_csv
 
 
 class Controller:
-    def __init__(self, _model, _view, _save):
+    def __init__(self, _model, _view):
         self.model = _model
         self.view = _view
-        self.save = _save
-        self.actions = {"1": self.add,
+        self.actions = {"1": self.create,
                         "2": self.update,
                         "3": self.delete,
-                        "4": self.search,
-                        "5": self.show_all,
-                        "6": self.save_file,
-                        "7": exit_program}
+                        "4": self.read,
+                        "5": self.read_all,
+                        "6": self.save_txt,
+                        "7": self.save_csv,
+                        "8": self.exit_program}
 
-    def show_all(self):
-        self.view.pb_print(self.model.show_all())
+    def create(self):
+        self.view.pb_output(self.model.create_contact(*self.view.new_elements()))
 
-    def search(self):
-        self.view.pb_print(self.model.search_contact(input("What contact to find?\n")))
+    def read(self):
+        self.view.pb_output(self.model.read_contact(self.view.pb_input("What contact to find?\n")))
 
-    def add(self):
-        self.view.pb_print(self.model.add_contact(*self.view.new_elements()))
+    def read_all(self):
+        self.view.pb_output(self.model.read_all())
 
     def update(self):
-        search_result = self.model.search_contact(input("What contact to update?\n"))
-        self.view.pb_print(search_result)
-        if type(search_result) is list:
-            selected_id = self.view.choose_id("Choose ID for update.\n", search_result)
-            if selected_id.isdigit():
-                first_name, last_name, phone_number = self.view.new_elements()
-                self.view.pb_print(self.model.update_contact(selected_id, first_name, last_name, phone_number))
-            else:
-                self.view.pb_print(selected_id)
+        self.contacts_modification_search('update')
 
     def delete(self):
-        search_result = self.model.search_contact(input("What contact to delete?\n"))
-        self.view.pb_print(search_result)
-        if type(search_result) is list:
-            selected_id = self.view.choose_id("Choose ID for delete.\n", search_result)
-            if selected_id.isdigit():
-                self.view.pb_print(self.model.delete_contact(selected_id))
-            else:
-                self.view.pb_print(selected_id)
+        self.contacts_modification_search('delete')
 
-    def save_file(self):
-        self.view.pb_print(self.save(self.model.show_all()))
+    def contacts_modification_search(self, mod_type):
+        search_result = self.model.read_contact(self.view.pb_input("What contact to {}?\n".format(mod_type)))
+        self.view.pb_output(search_result)
+        if type(search_result) is list:
+            self.contacts_modification_id(mod_type, search_result)
+
+    def contacts_modification_id(self, mod_type, search_result):
+        selected_id = self.model.select_id(self.view.pb_input("Choose ID for {}.\n".format(mod_type)), search_result)
+        self.contacts_modification(mod_type, selected_id)
+
+    def contacts_modification(self, mod_type, selected_id):
+        if selected_id.isdigit() and mod_type == 'update':
+            first_name, last_name, phone_number = self.view.new_elements()
+            self.view.pb_output(self.model.update_contact(selected_id, first_name, last_name, phone_number))
+        elif selected_id.isdigit() and mod_type == 'delete':
+            self.view.pb_output(self.model.delete_contact(selected_id))
+        else:
+            self.view.pb_output(selected_id)
+
+    def save_txt(self):
+        self.view.pb_output(self.model.txt())
+
+    def save_csv(self):
+        self.view.pb_output(self.model.csv())
+
+    def exit_program(self):
+        self.view.pb_output("Have a nice day!")
+        exit()
 
     def do_actions(self, command):
         try:
             self.actions[command]()
         except Exception as e:
-            return self.view.pb_print(e)
+            return self.view.pb_output(e)
 
     def run(self):
         while True:
-            command = input("What do you want to do? \n1 - Create\n2 - Update\n"
-                            "3 - Delete\n4 - Search\n5 - Show all\n6 - Save file\n7 - Exit\n")
+            command = self.view.pb_input("What do you want to do? \n1 - Create\n2 - Update\n"
+                                         "3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n"
+                                         "7 - Save as csv\n8 - Exit\n")
             self.do_actions(command)
 
 
-def exit_program():
-    exit("Have a nice day!")
-
-
 def main():
-    controller = Controller(PhoneBookModel(), View(), save_csv)
+    controller = Controller(Model(), View())
     controller.run()
 
 

@@ -2,10 +2,9 @@ from functools import total_ordering
 
 
 @total_ordering
-class PhoneBookContact:
+class Contact:
     STR_FORMAT = "Name: {} {} Phone: {}"
     STR_WITH_ID_FORMAT = "ID - {} Name: {} {} Phone: {}"
-    STR_MSG_FORMAT = "{}Name: {} {} Phone: {}"
 
     def __init__(self, first_name, last_name, phone_number):
         self._first_name = first_name
@@ -27,9 +26,6 @@ class PhoneBookContact:
 
     def with_index(self, out_list):
         return self.STR_WITH_ID_FORMAT.format(out_list.index(self), self.first_name, self.last_name, self.phone_number)
-
-    def msg(self, msg):
-        return self.STR_MSG_FORMAT.format(msg, self.first_name, self.last_name, self.phone_number)
 
     def __contains__(self, a):
         return a in self.contact

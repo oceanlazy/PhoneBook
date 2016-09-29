@@ -1,50 +1,38 @@
-from contacts import PhoneBookContact
-import pickle
+from contacts import Contact
+from data_manager import DataManager
 
 
-class PhoneBookModel:
-    def __init__(self, base_file="phone_book.pickle"):
-        self.file = base_file
-        self.contacts = self.load_data()
-
-    def load_data(self):
-        try:
-            with open(self.file, "rb") as base_file:
-                return pickle.load(base_file)
-        except (EOFError, FileNotFoundError):
-            return [PhoneBookContact('Arnold', 'Schwarzenegger', '0101'), PhoneBookContact('Bruce', 'Willis', '102'),
-                    PhoneBookContact('Sylvester', 'Stallone', '103')]
-            # return list()
-
-    def save_data(self):
-        with open(self.file, "wb") as f:
-            pickle.dump(self.contacts, f)
-
+class Model(DataManager):
     def add_check(self, phone_number):
         return phone_number in [x.phone_number for x in self.contacts]
 
-    def show_all(self):
-        r = [x for x in sorted(self.contacts)]
-        return r if r else "Phone Book is empty."
+    def create_contact(self, first_name, last_name, phone_number):
+        if self.add_check(phone_number):
+            return "Contact with this phone number is already in Phone Book."
+        self.contacts.append(Contact(first_name, last_name, phone_number))
+        self.save()
+        return "Contact successfully created.\n{}".format(str(self.contacts[-1]))
 
-    def search_contact(self, s):
+    def read_contact(self, s):
         r = [x.with_index(self.contacts) for x in self.contacts if s in x]
         return r if r else "Nothing found."
 
-    def add_contact(self, first_name, last_name, phone_number):
-        if self.add_check(phone_number):
-            return "Contact with this phone number is already in Phone Book."
-        self.contacts.append(PhoneBookContact(first_name, last_name, phone_number))
-        self.save_data()
-        return self.contacts[-1].msg("New contact.\n")
+    def read_all(self):
+        r = [x for x in sorted(self.contacts)]
+        return r if r else "Phone Book is empty."
 
     def update_contact(self, select_id, first_name, last_name, phone_number):
-        self.contacts[int(select_id)] = PhoneBookContact(first_name, last_name, phone_number)
-        self.save_data()
-        return self.contacts[int(select_id)].msg("Contact updated.\n")
+        self.contacts[int(select_id)] = Contact(first_name, last_name, phone_number)
+        self.save()
+        return "Contact successfully updated.\n{}".format(str(self.contacts[-1]))
 
     def delete_contact(self, select_id):
-        res = self.contacts[int(select_id)].msg("Contact deleted.\n")
+        res = "Contact successfully deleted.\n{}".format(str(self.contacts[-1]))
         del self.contacts[int(select_id)]
-        self.save_data()
+        self.save()
         return res
+
+    @staticmethod
+    def select_id(selected_id, search_result):
+        r = [x for x in search_result if selected_id and selected_id in x[5:7]]
+        return selected_id if r else 'ID "{}" is not in the search result.'.format(selected_id)
