@@ -13,7 +13,7 @@ class Model(DataManager):
         self.save()
         return "Contact successfully created.\n{}".format(str(self.contacts[-1]))
 
-    def read_contact(self, s):
+    def read(self, s):
         r = [x.with_index(self.contacts) for x in self.contacts if s in x]
         return r if r else "Nothing found."
 
