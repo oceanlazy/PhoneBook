@@ -1,7 +1,3 @@
-import socket
-import yaml
-
-
 class View:
     ERROR_FORMAT = "Error: {}"
 
