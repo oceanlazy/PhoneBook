@@ -1,30 +1,24 @@
+import socket
+import yaml
+
+
 class View:
     ERROR_FORMAT = "Error: {}"
-    INPUT_FIRST_NAME = "Enter first name.\n"
-    INPUT_LAST_NAME = "Enter last name.\n"
-    INPUT_PHONE_NUMBER = "Enter phone number.\n"
+
+    def __init__(self, _conn):
+        self.conn = _conn
 
     def pb_output(self, res):
         if isinstance(res, (list, tuple)):
-            for i in res:
-                print(i)
+            send = '\n'.join(res)
+            self.conn.sendall(bytes(send, 'utf-8'))
         elif isinstance(res, str):
-            print(res)
+            self.conn.sendall(bytes(res, 'utf-8'))
         elif isinstance(res, Exception):
-            print(self.ERROR_FORMAT.format(res))
-            # raise res
+            print(4)
+            self.conn.sendall(bytes(self.ERROR_FORMAT.format(res), 'utf-8'))
 
-    @staticmethod
-    def pb_input(msg):
-        res = input(msg)
-        return res
-
-    def new_elements(self):
-        first_name = input(self.INPUT_FIRST_NAME)
-        last_name = input(self.INPUT_LAST_NAME)
-        phone_number = input(self.INPUT_PHONE_NUMBER)
-        if not first_name.isalpha() or not last_name.isalpha():
-            raise TypeError("Name must be a string.")
-        if not phone_number.isdigit():
-            raise TypeError("Phone number must be a integer.")
-        return first_name, last_name, phone_number
+    def pb_input(self, msg):
+        self.conn.sendall(bytes(msg, 'utf-8'))
+        data = self.conn.recv(1024)
+        return data.decode('utf-8')
