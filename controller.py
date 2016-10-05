@@ -1,7 +1,5 @@
 from model import Model
 from view import View
-import socket
-import threading
 
 
 class Controller:
@@ -17,8 +15,9 @@ class Controller:
                         "3": self.delete,
                         "4": self.read,
                         "5": self.read_all,
-                        "6": self.save_csv,
-                        "7": self.exit_program}
+                        "6": self.save_txt,
+                        "7": self.save_csv,
+                        "8": self.exit_program}
 
     def create(self):
         self.view.pb_output(self.model.create_contact(*self.new_elements()))
@@ -65,10 +64,10 @@ class Controller:
         return first_name, last_name, phone_number
 
     def save_txt(self):
-        self.view.pb_output(self.model.save_txt(self.view.conn))
+        self.view.pb_output(self.model.save_file('txt', self.view.conn))
 
     def save_csv(self):
-        self.view.pb_output(self.model.save_csv(self.view.conn))
+        self.view.pb_output(self.model.save_file('csv', self.view.conn))
 
     def exit_program(self):
         self.view.pb_output("Have a nice day!")
@@ -80,34 +79,27 @@ class Controller:
         except Exception as e:
             return self.view.pb_output(e)
 
-    def session(self, conn):
+    def session_network(self, conn):
         while True:
-            self.view.conn.sendall(bytes("What do you want to do? \n1 - Create\n2 - Update\n"
-                                         "3 - Delete\n4 - Search\n5 - Show all\n6 - Save as csv\n"
-                                         "7 - Exit\n", 'utf-8'))
+            self.view.conn.sendall(bytes('What do you want to do? \n1 - Create\n2 - Update\n'
+                                         '3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n'
+                                         '7 - Save as csv\n8 - Exit\n', 'utf-8'))
             data = conn.recv(1024)
-            if not data:
-                conn.close()
-                return
             self.do_actions(data.decode('utf-8'))
 
-
-def server():
-    sock = socket.socket()
-    sock.bind(('localhost', 5000))
-    sock.listen(5)
-    print('Server waiting')
-    while True:
-        conn, adr = sock.accept()
-        print('Connected: {}'.format(adr))
-        t = threading.Thread(target=main, args=(conn,))
-        t.start()
-
-
-def main(conn):
-    controller = Controller(Model(), View(conn))
-    controller.session(conn)
-
+    def session_local(self):
+        while True:
+            self.model.save_pickle()
+            command = self.view.pb_input("What do you want to do? \n1 - Create\n2 - Update\n"
+                                         "3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n"
+                                         "7 - Save as csv\n8 - Exit\n")
+            self.do_actions(command)
 
 if __name__ == '__main__':
-    server()
+    controller_local = Controller(Model(), View(False))
+    controller_local.session_local()
+
+
+def main_network(conn):
+    controller_network = Controller(Model(), View(conn))
+    controller_network.session_network(conn)
