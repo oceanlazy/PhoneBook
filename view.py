@@ -25,7 +25,6 @@ class View:
 
     def pb_input(self, msg):
         if self.conn:
-            print()
             self.conn.sendall(bytes(msg, 'utf-8'))
             data = self.conn.recv(1024)
             return data.decode('utf-8')
