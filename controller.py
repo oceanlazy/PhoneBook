@@ -70,7 +70,7 @@ class Controller:
         self.view.pb_output(self.model.save_file('csv', self.view.conn))
 
     def exit_program(self):
-        self.view.pb_output("Have a nice day!")
+        self.view.pb_output("Program is successfully closed. Have a nice day!")
         exit()
 
     def do_actions(self, command):

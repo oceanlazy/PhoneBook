@@ -1,7 +1,7 @@
 import pickle
 import csv
-import os
 import threading
+import os
 from contacts import Contact
 
 

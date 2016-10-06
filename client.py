@@ -11,7 +11,7 @@ while True:
         inp = input(answer.decode('utf-8'))
         sock.sendall(bytes(inp, 'utf-8'))
         answer = sock.recv(1024)
-    if answer.decode('utf-8').isdigit():
+    if answer.isdigit():
         file_size = int(answer)
         answer = sock.recv(file_size)
         if answer.startswith(b'first_name;'):
@@ -22,6 +22,6 @@ while True:
             file.write(answer)
         answer = sock.recv(69)
     print(answer.decode('utf-8'))
-    if inp == '8':
+    if b'closed' in answer:
         sock.close()
         exit()
