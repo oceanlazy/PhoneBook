@@ -1,5 +1,6 @@
 from model import Model
 from view import View
+from data_manager import LocalDataManager, NetworkDataManager
 
 
 class Controller:
@@ -64,10 +65,10 @@ class Controller:
         return first_name, last_name, phone_number
 
     def save_txt(self):
-        self.view.pb_output(self.model.save_file('txt', self.view.conn))
+        self.view.pb_output(self.model.data_manager.save_file('txt', self.view.conn))
 
     def save_csv(self):
-        self.view.pb_output(self.model.save_file('csv', self.view.conn))
+        self.view.pb_output(self.model.data_manager.save_file('csv', self.view.conn))
 
     def exit_program(self):
         self.view.pb_output("Program is successfully closed. Have a nice day!")
@@ -89,17 +90,17 @@ class Controller:
 
     def session_local(self):
         while True:
-            self.model.save_pickle()
+            self.model.data_manager.save_pickle()
             command = self.view.pb_input("What do you want to do? \n1 - Create\n2 - Update\n"
                                          "3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n"
                                          "7 - Save as csv\n8 - Exit\n")
             self.do_actions(command)
 
 if __name__ == '__main__':
-    controller_local = Controller(Model(), View(False))
-    controller_local.session_local()
+    controller = Controller(Model(LocalDataManager()), View(False))
+    controller.session_local()
 
 
 def main_network(conn):
-    controller_network = Controller(Model(), View(conn))
-    controller_network.session_network(conn)
+    controller = Controller(Model(NetworkDataManager()), View(conn))
+    controller.session_network(conn)

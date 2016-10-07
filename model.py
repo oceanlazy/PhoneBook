@@ -1,8 +1,11 @@
-from data_manager import DataManager
 from contacts import Contact
 
 
-class Model(DataManager):
+class Model:
+    def __init__(self, _data_manager):
+        self.data_manager = _data_manager
+        self.contacts = self.data_manager.get_contacts()
+
     def add_check(self, phone_number):
         return phone_number in [x.phone_number for x in self.contacts]
 
