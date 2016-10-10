@@ -1,6 +1,6 @@
 from model import Model
-from view import View
-from data_manager import LocalDataManager, NetworkDataManager
+from view import LocalView, NetworkView
+from data_manager import LocalDataManager, NetworkDataManager, check_database
 
 
 class Controller:
@@ -36,9 +36,9 @@ class Controller:
         self.contacts_modification_search('delete')
 
     def contacts_modification_search(self, mod_type):
-        search_result = self.model.read(self.view.pb_input("What contact to {}?\n".format(mod_type)))
+        search_result = self.model.read(self.view.pb_input("What contact to {}?\n".format(mod_type)), show_id=True)
         self.view.pb_output(search_result)
-        if type(search_result) is list:
+        if search_result != 'Nothing found.':
             self.contacts_modification_id(mod_type, search_result)
 
     def contacts_modification_id(self, mod_type, search_result):
@@ -48,9 +48,9 @@ class Controller:
     def contacts_modification(self, mod_type, selected_id):
         if selected_id.isdigit() and mod_type == 'update':
             first_name, last_name, phone_number = self.new_elements()
-            self.view.pb_output(self.model.update_contact(selected_id, first_name, last_name, phone_number))
+            self.view.pb_output(self.model.update(selected_id, first_name, last_name, phone_number))
         elif selected_id.isdigit() and mod_type == 'delete':
-            self.view.pb_output(self.model.delete_contact(selected_id))
+            self.view.pb_output(self.model.delete(selected_id))
         else:
             self.view.pb_output(selected_id)
 
@@ -61,14 +61,14 @@ class Controller:
         if not first_name.isalpha() or not last_name.isalpha():
             raise TypeError("Name must be a string.")
         if not phone_number.isdigit():
-            raise TypeError("Phone number must be a integer.")
+            raise TypeError("Phone number must be an integer.")
         return first_name, last_name, phone_number
 
     def save_txt(self):
-        self.view.pb_output(self.model.data_manager.save_file('txt', self.view.conn))
+        self.view.pb_output(self.model.data_manager.save_file('txt'))
 
     def save_csv(self):
-        self.view.pb_output(self.model.data_manager.save_file('csv', self.view.conn))
+        self.view.pb_output(self.model.data_manager.save_file('csv'))
 
     def exit_program(self):
         self.view.pb_output("Program is successfully closed. Have a nice day!")
@@ -80,27 +80,29 @@ class Controller:
         except Exception as e:
             return self.view.pb_output(e)
 
-    def session_network(self, conn):
+    def local_session(self):
+        self.view.pb_output(check_database())
         while True:
-            self.view.conn.sendall(bytes('What do you want to do? \n1 - Create\n2 - Update\n'
-                                         '3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n'
-                                         '7 - Save as csv\n8 - Exit\n', 'utf-8'))
-            data = conn.recv(1024)
-            self.do_actions(data.decode('utf-8'))
-
-    def session_local(self):
-        while True:
-            self.model.data_manager.save_pickle()
             command = self.view.pb_input("What do you want to do? \n1 - Create\n2 - Update\n"
                                          "3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n"
                                          "7 - Save as csv\n8 - Exit\n")
             self.do_actions(command)
 
+    def network_session(self):
+        self.view.pb_output(check_database())
+        while True:
+            self.view.conn.sendall(b'What do you want to do? \n1 - Create\n2 - Update\n'
+                                   b'3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n'
+                                   b'7 - Save as csv\n8 - Exit\n')
+            query = self.view.conn.recv(1024)
+            self.do_actions(query.decode('utf-8'))
+
+
 if __name__ == '__main__':
-    controller = Controller(Model(LocalDataManager()), View(False))
-    controller.session_local()
+    controller = Controller(Model(LocalDataManager()), LocalView())
+    controller.local_session()
 
 
 def main_network(conn):
-    controller = Controller(Model(NetworkDataManager()), View(conn))
-    controller.session_network(conn)
+    controller = Controller(Model(NetworkDataManager(conn)), NetworkView(conn))
+    controller.network_session()

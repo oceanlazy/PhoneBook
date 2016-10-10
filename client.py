@@ -4,6 +4,9 @@ sock = socket.socket()
 sock.connect(('localhost', 5000))
 while True:
     answer = sock.recv(140)
+    if b'atabase' in answer:
+        print(answer.decode('utf-8'))
+        answer = sock.recv(140)
     inp = input(answer.decode('utf-8'))
     sock.sendall(bytes(inp, 'utf-8'))
     answer = sock.recv(1024)
@@ -20,7 +23,7 @@ while True:
             file_name = 'phone_book_data_2.txt'
         with open(file_name, 'wb') as file:
             file.write(answer)
-        answer = sock.recv(69)
+        answer = sock.recv(51)  # 85-68=17
     print(answer.decode('utf-8'))
     if b'closed' in answer:
         sock.close()
