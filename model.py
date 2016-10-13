@@ -38,8 +38,8 @@ class Model:
 
     def update(self, _id, first_name, last_name, phone_number):
         self.data_manager.database_conn.contacts.update_one({"_id": _id}, {'$set': {"first_name": first_name,
-                                                                                         "last_name": last_name,
-                                                                                         "phone_number": phone_number}})
+                                                                                    "last_name": last_name,
+                                                                                    "phone_number": phone_number}})
         return 'Contact was successfully updated.'
 
     def delete(self, _id):
