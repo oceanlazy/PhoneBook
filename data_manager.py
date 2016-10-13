@@ -1,24 +1,23 @@
 import csv
 import os
 import threading
-import psycopg2
+from pymongo import MongoClient
+from collections import OrderedDict
 
 
 class LocalDataManager:
     def __init__(self, _file_name='phone_book'):
         self.file_name = '{}.%s'.format(_file_name)
-        self.database_conn = psycopg2.connect(database="postgres", user="postgres", password=" ", port=5432)
-        self.cursor = self.database_conn.cursor()
+        self.database_conn = MongoClient(document_class=OrderedDict).phonebook
 
     def get_contacts(self):
-        self.cursor.execute("SELECT * FROM phonebook")
-        return self.cursor.fetchall()
+        return [list(x.values()) for x in list(self.database_conn.contacts.find({}, {'_id': False}))]
 
     def save_file(self, extension):
         if extension == 'txt':
-            save_txt(self.file_name % extension, self.get_contacts())
+            save_txt(self.file_name % extension, get_contacts(self.database_conn))
         elif extension == 'csv':
-            save_csv(self.file_name % extension, self.get_contacts())
+            save_csv(self.file_name % extension, get_contacts(self.database_conn))
         return 'Phone Book data is successfully saved to .{} file.'.format(extension)
 
 
@@ -26,18 +25,13 @@ class NetworkDataManager:
     def __init__(self, _conn, _file_name='phone_book'):
         self.file_name = '{}_{}.%s'.format(_file_name, str(threading.current_thread().ident))
         self.client_conn = _conn
-        self.database_conn = psycopg2.connect(database="postgres", user="postgres", password=" ", port=5432)
-        self.cursor = self.database_conn.cursor()
-
-    def get_contacts(self):
-        self.cursor.execute("SELECT * FROM phonebook")
-        return self.cursor.fetchall()
+        self.database_conn = MongoClient(document_class=OrderedDict).phonebook
 
     def save_file(self, extension):
         if extension == 'txt':
-            save_txt(self.file_name % extension, self.get_contacts())
+            save_txt(self.file_name % extension, get_contacts(self.database_conn))
         elif extension == 'csv':
-            save_csv(self.file_name % extension, self.get_contacts())
+            save_csv(self.file_name % extension, get_contacts(self.database_conn))
         self.send_file(extension)
         return 'Phone Book data is successfully saved to .{} file.'.format(extension)
 
@@ -49,6 +43,10 @@ class NetworkDataManager:
             data = file.read(int(file_size))
             self.client_conn.send(data)
         os.remove(file_name)
+
+
+def get_contacts(conn):
+    return [list(x.values()) for x in list(conn.contacts.find({}, {'_id': False}))]
 
 
 def save_txt(file_name, contacts):
@@ -66,18 +64,12 @@ def save_csv(file_name, contacts):
 
 
 def check_database():
-    base_data = ({'first_name': 'Arnold', 'last_name': 'Schwarzenegger', 'phone_number': '0101'},
-                 {'first_name': 'Bruce', 'last_name': 'Willis', 'phone_number': '102'},
-                 {'first_name': 'Sylvester', 'last_name': 'Stallone', 'phone_number': '103'})
-    conn = psycopg2.connect(database="postgres", user="postgres", password=" ", port=5432)
-    cur = conn.cursor()
-    try:
-        cur.execute(
-            '''CREATE TABLE phonebook (id serial, first_name text, last_name text, phone_number text)''')
-        cur.executemany('INSERT INTO phonebook(first_name,last_name,phone_number) '
-                        'VALUES (%(first_name)s, %(last_name)s, %(phone_number)s)', base_data)
-        conn.commit()
-    except psycopg2.ProgrammingError:
-        return 'Database is successfully loaded.'
-    else:
-        return 'New database is successfully created.'
+    client = MongoClient(document_class=OrderedDict)
+    db = client.phonebook
+    base_data = (
+        OrderedDict([("_id", 1), ('first_name', 'Arnold'), ('last_name', 'Schwarzenegger'), ('phone_number', '0101')]),
+        OrderedDict([("_id", 2), ('first_name', 'Bruce'), ('last_name', 'Willis'), ('phone_number', '102')]),
+        OrderedDict([("_id", 3), ('first_name', 'Sylvester'), ('last_name', 'Stallone'), ('phone_number', '102')]))
+    if 'contacts' not in db.collection_names():
+        db.contacts.insert(base_data)
+    return 'Database is successfully loaded.'

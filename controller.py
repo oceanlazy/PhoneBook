@@ -36,7 +36,7 @@ class Controller:
         self.contacts_modification_search('delete')
 
     def contacts_modification_search(self, mod_type):
-        search_result = self.model.read(self.view.pb_input("What contact to {}?\n".format(mod_type)), show_id=True)
+        search_result = self.model.read(self.view.pb_input("What contact to {}?\n".format(mod_type)))
         self.view.pb_output(search_result)
         if search_result != 'Nothing found.':
             self.contacts_modification_id(mod_type, search_result)
