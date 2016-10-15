@@ -1,108 +1,158 @@
-from model import Model
-from view import LocalView, NetworkView
-from data_manager import LocalDataManager, NetworkDataManager, check_database
+from tkinter.filedialog import *
+import pickle
+import csv
+import os
 
 
-class Controller:
-    INPUT_FIRST_NAME = "Enter first name?\n"
-    INPUT_LAST_NAME = "Enter last name?\n"
-    INPUT_PHONE_NUMBER = "Enter phone number?\n"
+class App:
+    FILE_FORMATS = [('TXT file format', '*.txt'), ('Comma Separated Values file format', '*.csv'),
+                    ('PICKLE file format', '*.pickle'), ('All files', '.*')]
 
-    def __init__(self, _model, _view):
-        self.model = _model
-        self.view = _view
-        self.actions = {"1": self.create,
-                        "2": self.update,
-                        "3": self.delete,
-                        "4": self.read,
-                        "5": self.read_all,
-                        "6": self.save_txt,
-                        "7": self.save_csv,
-                        "8": self.exit_program}
+    def __init__(self, _win):
+        self.win = _win
+        self.win.title(u'Phone book')
+        self.contacts = self.get_contacts()
+
+        menu_bar = Menu(self.win)
+        menu_bar.add_command(label="Open", command=self.open_file)
+        menu_bar.add_command(label="Save", command=self.save_file)
+        menu_bar.add_command(label="Exit", command=self.win.quit)
+        self.win.config(menu=menu_bar)
+
+        frame1 = Frame(self.win)
+        frame1.pack()
+
+        Label(frame1, text="First name").grid(row=0, column=0, sticky=W)
+        self.first_name_var = StringVar()
+        name = Entry(frame1, textvariable=self.first_name_var)
+        name.grid(row=0, column=1, sticky=W)
+
+        Label(frame1, text="Last name").grid(row=1, column=0, sticky=W)
+        self.last_name_var = StringVar()
+        name = Entry(frame1, textvariable=self.last_name_var)
+        name.grid(row=1, column=1, sticky=W)
+
+        Label(frame1, text="   Phone").grid(row=2, column=0, sticky=W)
+        self.phone_var = StringVar()
+        phone = Entry(frame1, textvariable=self.phone_var)
+        phone.grid(row=2, column=1, sticky=W)
+
+        frame2 = Frame(self.win)
+        frame2.pack()
+        Button(frame2, text="Create", command=self.create).grid(row=1, column=1)
+        Button(frame2, text=" Read ", command=self.read).grid(row=1, column=2)
+        Button(frame2, text="Update", command=self.update).grid(row=1, column=3)
+        Button(frame2, text="Delete", command=self.delete).grid(row=1, column=4)
+
+        frame4 = Frame(self.win)
+        frame4.pack()
+        scroll = Scrollbar(frame4, orient=VERTICAL)
+        self.select = Listbox(frame4, yscrollcommand=scroll.set, height=6)
+        scroll.config(command=self.select.yview)
+        scroll.pack(side=RIGHT, fill=Y)
+        self.select.pack(side=LEFT, fill=BOTH, expand=1)
+        self.contacts_select()
+
+    @staticmethod
+    def get_contacts():
+        try:
+            with open('phonebook.pickle', 'rb') as file:
+                return pickle.load(file)
+        except (EOFError, FileNotFoundError):
+            return list()
+
+    def open_file(self):
+        file_path = askopenfilename(parent=self.win, filetypes=self.FILE_FORMATS)
+        if file_path:
+            try:
+                file_name, file_extension = os.path.splitext(file_path)
+                if file_extension == '.txt':
+                    with open(file_path, 'r') as file:
+                        self.contacts = [x.split() for x in file.read().splitlines()]
+                if file_extension == '.csv':
+                    with open(file_path, 'r', newline='') as file:
+                        reader = csv.reader(file, delimiter=';')
+                        reader.__next__()
+                        self.contacts = list()
+                        for row in reader:
+                            self.contacts.append([*row])
+                if file_extension == '.pickle':
+                    with open(file_path, 'rb') as file:
+                        self.contacts = pickle.load(file)
+                self.contacts_select()
+            except (EOFError, FileNotFoundError, IndexError):
+                print('Wrong file.')
+
+    def save_file(self):
+        file_path = asksaveasfilename(parent=self.win, filetypes=self.FILE_FORMATS)
+        if file_path:
+            file_name, file_extension = os.path.splitext(file_path)
+            if file_extension == '.txt':
+                with open(file_path, 'w') as file:
+                    for contact in self.contacts:
+                        file.write('{}\n'.format(' '.join(contact)))
+            if file_extension == '.csv':
+                with open(file_path, 'w', newline='') as file:
+                    writer = csv.writer(file, delimiter=';')
+                    writer.writerow(['First name', 'Last name', 'Phone number'])
+                    for contact in self.contacts:
+                        writer.writerow([*contact])
+            if file_extension == '.pickle':
+                with open(file_path, 'wb') as file:
+                    pickle.dump(self.contacts, file)
+
+    def auto_save(self):
+        with open('phonebook.pickle', 'wb') as file:
+            pickle.dump(self.contacts, file)
+
+    def after_action(self):
+        self.first_name_var.set('')
+        self.last_name_var.set('')
+        self.phone_var.set('')
+        self.auto_save()
+        self.contacts_select()
+
+    def which_selected(self):
+        print(self.select.curselection()[0])
+        try:
+            print(1)
+            return int(self.select.curselection()[0])
+        except IndexError:
+            print(2)
+            return
 
     def create(self):
-        self.view.pb_output(self.model.create_contact(*self.new_elements()))
+        self.contacts.append([self.first_name_var.get(), self.last_name_var.get(), self.phone_var.get()])
+        self.after_action()
 
     def read(self):
-        self.view.pb_output(self.model.read(self.view.pb_input("What contact to find?\n")))
-
-    def read_all(self):
-        self.view.pb_output(self.model.read_all())
+        self.select.delete(0, END)
+        for first_name, last_name, phone in self.contacts:
+            if self.first_name_var.get() in first_name and self.last_name_var.get() in last_name \
+                    and self.phone_var.get() in phone:
+                self.select.insert(END, [first_name, last_name, phone])
 
     def update(self):
-        self.contacts_modification_search('update')
+        contact_inx = self.which_selected()
+        print(3, contact_inx)
+        if contact_inx is not None and self.first_name_var.get() and self.last_name_var.get() and self.phone_var.get():
+            self.contacts[contact_inx] = [self.first_name_var.get(), self.last_name_var.get(), self.phone_var.get()]
+            self.after_action()
+            print(4)
 
     def delete(self):
-        self.contacts_modification_search('delete')
+        contact_inx = self.which_selected()
+        if contact_inx:
+            del self.contacts[contact_inx]
+            self.after_action()
 
-    def contacts_modification_search(self, mod_type):
-        search_result = self.model.read(self.view.pb_input("What contact to {}?\n".format(mod_type)))
-        self.view.pb_output(search_result)
-        if search_result != 'Nothing found.':
-            self.contacts_modification_id(mod_type, search_result)
-
-    def contacts_modification_id(self, mod_type, search_result):
-        selected_id = self.model.select_id(self.view.pb_input("What ID to {}?\n".format(mod_type)), search_result)
-        self.contacts_modification(mod_type, selected_id)
-
-    def contacts_modification(self, mod_type, selected_id):
-        if selected_id.isdigit() and mod_type == 'update':
-            first_name, last_name, phone_number = self.new_elements()
-            self.view.pb_output(self.model.update(selected_id, first_name, last_name, phone_number))
-        elif selected_id.isdigit() and mod_type == 'delete':
-            self.view.pb_output(self.model.delete(selected_id))
-        else:
-            self.view.pb_output(selected_id)
-
-    def new_elements(self):
-        first_name = self.view.pb_input(self.INPUT_FIRST_NAME)
-        last_name = self.view.pb_input(self.INPUT_LAST_NAME)
-        phone_number = self.view.pb_input(self.INPUT_PHONE_NUMBER)
-        if not first_name.isalpha() or not last_name.isalpha():
-            raise TypeError("Name must be a string.")
-        if not phone_number.isdigit():
-            raise TypeError("Phone number must be an integer.")
-        return first_name, last_name, phone_number
-
-    def save_txt(self):
-        self.view.pb_output(self.model.data_manager.save_file('txt'))
-
-    def save_csv(self):
-        self.view.pb_output(self.model.data_manager.save_file('csv'))
-
-    def exit_program(self):
-        self.view.pb_output("Program is successfully closed. Have a nice day!")
-        exit()
-
-    def do_actions(self, command):
-        try:
-            self.actions[command]()
-        except Exception as e:
-            return self.view.pb_output(e)
-
-    def local_session(self):
-        self.view.pb_output(check_database())
-        while True:
-            command = self.view.pb_input("What do you want to do? \n1 - Create\n2 - Update\n"
-                                         "3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n"
-                                         "7 - Save as csv\n8 - Exit\n")
-            self.do_actions(command)
-
-    def network_session(self):
-        self.view.pb_output(check_database())
-        while True:
-            self.view.conn.sendall(b'What do you want to do? \n1 - Create\n2 - Update\n'
-                                   b'3 - Delete\n4 - Search\n5 - Show all\n6 - Save as txt\n'
-                                   b'7 - Save as csv\n8 - Exit\n')
-            query = self.view.conn.recv(1024)
-            self.do_actions(query.decode('utf-8'))
+    def contacts_select(self):
+        self.select.delete(0, END)
+        for first_name, last_name, phone in self.contacts:
+            self.select.insert(END, [first_name, last_name, phone])
 
 
 if __name__ == '__main__':
-    controller = Controller(Model(LocalDataManager()), LocalView())
-    controller.local_session()
-
-
-def main_network(conn):
-    controller = Controller(Model(NetworkDataManager(conn)), NetworkView(conn))
-    controller.network_session()
+    root = Tk()
+    app = App(root)
+    root.mainloop()
