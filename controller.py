@@ -11,7 +11,7 @@ class App:
     def __init__(self, _win):
         self.win = _win
         self.win.title('Phone Book')
-        self.contacts = self.get_contacts()
+        self.contacts = self.pickle_open('phonebook.pickle')
 
         menu_bar = Menu(self.win)
         menu_bar.add_command(label="Open", command=self.open_file)
@@ -53,32 +53,17 @@ class App:
         self.select.pack(side=LEFT, fill=BOTH, expand=1)
         self.contacts_select()
 
-    @staticmethod
-    def get_contacts():
-        try:
-            with open('phonebook.pickle', 'rb') as file:
-                return pickle.load(file)
-        except (EOFError, FileNotFoundError):
-            return list()
-
     def open_file(self):
         file_path = askopenfilename(parent=self.win, filetypes=self.FILE_FORMATS)
         if file_path:
             try:
                 file_name, file_extension = os.path.splitext(file_path)
                 if file_extension == '.txt':
-                    with open(file_path, 'r') as file:
-                        self.contacts = [tuple(x.split()) for x in file.read().splitlines()]
+                    self.contacts = self.txt_open(file_path)
                 if file_extension == '.csv':
-                    with open(file_path, 'r', newline='') as file:
-                        reader = csv.reader(file, delimiter=';')
-                        reader.__next__()
-                        self.contacts = list()
-                        for row in reader:
-                            self.contacts.append((*row,))
+                    self.contacts = self.csv_open(file_path)
                 if file_extension == '.pickle':
-                    with open(file_path, 'rb') as file:
-                        self.contacts = pickle.load(file)
+                    self.contacts = self.pickle_open(file_path)
                 self.contacts_select()
             except (EOFError, FileNotFoundError, IndexError):
                 pass
@@ -88,32 +73,20 @@ class App:
         if file_path:
             file_name, file_extension = os.path.splitext(file_path)
             if file_extension == '.txt':
-                with open(file_path, 'w') as file:
-                    for contact in self.contacts:
-                        file.write('{}\n'.format(' '.join(contact)))
+                self.txt_save(file_path)
             if file_extension == '.csv':
-                with open(file_path, 'w', newline='') as file:
-                    writer = csv.writer(file, delimiter=';')
-                    writer.writerow(['First name', 'Last name', 'Phone number'])
-                    for contact in self.contacts:
-                        writer.writerow([*contact])
+                self.csv_save(file_path)
             if file_extension == '.pickle':
-                with open(file_path, 'wb') as file:
-                    pickle.dump(self.contacts, file)
-
-    def auto_save(self):
-        with open('phonebook.pickle', 'wb') as file:
-            pickle.dump(self.contacts, file)
+                self.pickle_save(file_path)
 
     def after_action(self):
         self.first_name_var.set('')
         self.last_name_var.set('')
         self.phone_var.set('')
-        self.auto_save()
+        self.pickle_save('phonebook.pickle')
         self.contacts_select()
 
     def which_selected(self):
-        print(self.contacts)
         try:
             return int(self.contacts.index(self.select.get(self.select.curselection()[0])))
         except IndexError:
@@ -147,6 +120,42 @@ class App:
         self.select.delete(0, END)
         for first_name, last_name, phone in self.contacts:
             self.select.insert(END, [first_name, last_name, phone])
+
+    @staticmethod
+    def txt_open(file_path):
+        with open(file_path, 'r') as file:
+            return [tuple(x.split()) for x in file.read().splitlines()]
+
+    @staticmethod
+    def csv_open(file_path):
+        with open(file_path, 'r', newline='') as file:
+            reader = csv.reader(file, delimiter=';')
+            reader.__next__()
+            contacts = list()
+            for row in reader:
+                contacts.append((*row,))
+            return contacts
+
+    @staticmethod
+    def pickle_open(file_path):
+        with open(file_path, 'rb') as file:
+            return pickle.load(file)
+
+    def txt_save(self, file_path):
+        with open(file_path, 'w') as file:
+            for contact in self.contacts:
+                file.write('{}\n'.format(' '.join(contact)))
+
+    def csv_save(self, file_path):
+        with open(file_path, 'w', newline='') as file:
+            writer = csv.writer(file, delimiter=';')
+            writer.writerow(['First name', 'Last name', 'Phone number'])
+            for contact in self.contacts:
+                writer.writerow([*contact])
+
+    def pickle_save(self, file_path):
+        with open(file_path, 'wb') as file:
+            pickle.dump(self.contacts, file)
 
 
 if __name__ == '__main__':
