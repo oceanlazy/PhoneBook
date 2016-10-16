@@ -10,7 +10,7 @@ class App:
 
     def __init__(self, _win):
         self.win = _win
-        self.win.title(u'Phone book')
+        self.win.title('Phone Book')
         self.contacts = self.get_contacts()
 
         menu_bar = Menu(self.win)
@@ -68,20 +68,20 @@ class App:
                 file_name, file_extension = os.path.splitext(file_path)
                 if file_extension == '.txt':
                     with open(file_path, 'r') as file:
-                        self.contacts = [x.split() for x in file.read().splitlines()]
+                        self.contacts = [tuple(x.split()) for x in file.read().splitlines()]
                 if file_extension == '.csv':
                     with open(file_path, 'r', newline='') as file:
                         reader = csv.reader(file, delimiter=';')
                         reader.__next__()
                         self.contacts = list()
                         for row in reader:
-                            self.contacts.append([*row])
+                            self.contacts.append((*row,))
                 if file_extension == '.pickle':
                     with open(file_path, 'rb') as file:
                         self.contacts = pickle.load(file)
                 self.contacts_select()
             except (EOFError, FileNotFoundError, IndexError):
-                print('Wrong file.')
+                pass
 
     def save_file(self):
         file_path = asksaveasfilename(parent=self.win, filetypes=self.FILE_FORMATS)
@@ -113,36 +113,33 @@ class App:
         self.contacts_select()
 
     def which_selected(self):
-        print(self.select.curselection()[0])
+        print(self.contacts)
         try:
-            print(1)
-            return int(self.select.curselection()[0])
+            return int(self.contacts.index(self.select.get(self.select.curselection()[0])))
         except IndexError:
-            print(2)
             return
 
     def create(self):
-        self.contacts.append([self.first_name_var.get(), self.last_name_var.get(), self.phone_var.get()])
-        self.after_action()
+        if self.first_name_var.get() and self.last_name_var.get() and self.phone_var.get():
+            self.contacts.append((self.first_name_var.get(), self.last_name_var.get(), self.phone_var.get()))
+            self.after_action()
 
     def read(self):
         self.select.delete(0, END)
-        for first_name, last_name, phone in self.contacts:
-            if self.first_name_var.get() in first_name and self.last_name_var.get() in last_name \
-                    and self.phone_var.get() in phone:
-                self.select.insert(END, [first_name, last_name, phone])
+        for contact in self.contacts:
+            if (self.first_name_var.get() or self.last_name_var.get() or self.phone_var.get()) in contact \
+                    or not (self.first_name_var.get() or self.last_name_var.get() or self.phone_var.get()):
+                self.select.insert(END, contact)
 
     def update(self):
         contact_inx = self.which_selected()
-        print(3, contact_inx)
         if contact_inx is not None and self.first_name_var.get() and self.last_name_var.get() and self.phone_var.get():
-            self.contacts[contact_inx] = [self.first_name_var.get(), self.last_name_var.get(), self.phone_var.get()]
+            self.contacts[contact_inx] = (self.first_name_var.get(), self.last_name_var.get(), self.phone_var.get())
             self.after_action()
-            print(4)
 
     def delete(self):
         contact_inx = self.which_selected()
-        if contact_inx:
+        if contact_inx is not None:
             del self.contacts[contact_inx]
             self.after_action()
 
