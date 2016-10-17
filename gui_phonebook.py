@@ -13,8 +13,8 @@ class App:
         self.contacts = self.pickle_open('phonebook.pickle')
 
         menu_bar = Menu(self.win)
-        menu_bar.add_command(label="Open", command=self.open_file)
-        menu_bar.add_command(label="Save", command=self.save_file)
+        menu_bar.add_command(label="Open", command=self.opener)
+        menu_bar.add_command(label="Save", command=self.saver)
         menu_bar.add_command(label="Exit", command=self.win.quit)
         self.win.config(menu=menu_bar)
 
@@ -53,7 +53,7 @@ class App:
         scroll.config(command=self.select.yview)
         scroll.pack(side=RIGHT, fill=Y)
         self.select.pack(side=LEFT, fill=BOTH, expand=True)
-        self.contacts_select()
+        self.read()
 
     def create(self):
         if self.check_fields():
@@ -86,18 +86,13 @@ class App:
         except IndexError:
             self.status_bar['text'] = 'Not found item'
 
-    def contacts_select(self):
-        self.select.delete(0, END)
-        for contact in self.contacts:
-            self.select.insert(END, contact)
-
-    def finish_action(self):
+    def finish_action(self, status='Ready'):
         self.first_name_var.set('')
         self.last_name_var.set('')
         self.phone_var.set('')
         self.pickle_save('phonebook.pickle')
-        self.contacts_select()
-        self.status_bar['text'] = 'Ready'
+        self.read()
+        self.status_bar['text'] = status
 
     def check_fields(self):
         if self.first_name_var.get() and self.last_name_var.get() and self.phone_var.get():
@@ -105,7 +100,7 @@ class App:
         else:
             self.status_bar['text'] = 'Empty contact fields'
 
-    def open_file(self):
+    def opener(self):
         file_path = askopenfilename(parent=self.win, filetypes=self.FILE_FORMATS)
         if file_path:
             file_name, file_extension = os.path.splitext(file_path)
@@ -119,10 +114,9 @@ class App:
             except (EOFError, UnicodeDecodeError, IndexError):
                 self.status_bar['text'] = 'Wrong file'
             else:
-                self.contacts_select()
-                self.status_bar['text'] = 'File is loaded'
+                self.finish_action('File is loaded')
 
-    def save_file(self):
+    def saver(self):
         file_path = asksaveasfilename(parent=self.win, filetypes=self.FILE_FORMATS)
         if file_path:
             file_name, file_extension = os.path.splitext(file_path)
