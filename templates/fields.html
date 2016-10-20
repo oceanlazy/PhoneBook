@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Phone Book - {{ action_name }}</title>
+    </head>
+    <body>
+        <h2>Phone Book</h2>
+        <p>{% autoescape false %}{{ action_desc }}{% endautoescape %}</p>
+        <form method='post'>
+            {% autoescape false %}{{  input_id  }}{% endautoescape %}
+            {% autoescape false %}{{  contact_fields  }}{% endautoescape %}
+            <p>{{  alert  }}</p>
+            <p><input type="submit" name="submit" value='Enter'></p>
+            <p><input type="submit" name="submit" value='Back'></p>
+        </form>
+    </body>
+</html>

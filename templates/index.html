@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Phone Book</title>
+    </head>
+    <body>
+        <h2>Phone Book</h2>
+        <p>What do you want to do?</p>
+        <form method='post'>
+            <p><a href='/create'>Create</a></p>
+            <p><a href='/read'>Read</a></p>
+            <p><a href='/update'>Update</a></p>
+            <p><a href='/delete'>Delete</a></p>
+        </form>
+        <form method="post" enctype="multipart/form-data">
+            <p><a href='/save_txt'>Save as txt</a></p>
+            <p><a href='/save_csv'>Save as csv</a></p>
+        </form>
+        <p>{% autoescape false %}{{  message  }}{% endautoescape %}</p>
+    </body>
+</html>

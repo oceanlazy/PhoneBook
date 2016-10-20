@@ -8,10 +8,7 @@ from collections import OrderedDict
 class LocalDataManager:
     def __init__(self, _file_name='phone_book'):
         self.file_name = '{}.%s'.format(_file_name)
-        self.database_conn = MongoClient(document_class=OrderedDict).phonebook
-
-    def get_contacts(self):
-        return [list(x.values()) for x in list(self.database_conn.contacts.find({}, {'_id': False}))]
+        self.database_conn = MongoClient(document_class=OrderedDict).phonebook.contacts
 
     def save_file(self, extension):
         if extension == 'txt':
