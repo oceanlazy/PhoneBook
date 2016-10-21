@@ -27,7 +27,7 @@ class LocalDataManager:
             writer.writerow(['First name', 'Last name', 'Phone number'])
             for contact in self.contacts:
                 writer.writerow([*contact])
-        return 'Phone Book data is successfully saved to .csv file'
+        return 'Phone Book data is successfully saved to .csv file.'
 
     def check_database(self):
         base_data = (
