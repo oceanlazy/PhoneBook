@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 class Model:
     STR_FORMAT = 'Name: {} {} Phone: {}'
-    STR_ID_FORMAT = 'ID: {} Name: {} {} Phone: {}'
+    STR_ID_FORMAT = 'ID - {} Name: {} {} Phone: {}'
 
     def __init__(self, _data_manager=None):
         self.data_manager = _data_manager
