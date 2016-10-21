@@ -1,12 +1,12 @@
 import socket
 
+
 sock = socket.socket()
 sock.connect(('localhost', 5000))
 while True:
     answer = sock.recv(140)
     if b'atabase' in answer:
-        print(answer.decode('utf-8'))
-        answer = sock.recv(140)
+        answer = sock.recv(65)
     inp = input(answer.decode('utf-8'))
     sock.sendall(bytes(inp, 'utf-8'))
     answer = sock.recv(1024)

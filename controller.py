@@ -1,6 +1,6 @@
 from model import Model
 from view import LocalView, NetworkView
-from data_manager import LocalDataManager, NetworkDataManager, check_database
+from data_manager import LocalDataManager, NetworkDataManager
 
 
 class Controller:
@@ -22,7 +22,7 @@ class Controller:
     def create(self):
         self.view.pb_output(self.model.create(*self.contact_elements()))
 
-    def read(self):  # TODO socket
+    def read(self):
         self.view.pb_output(self.model.read(*self.contact_elements()))
 
     def read_all(self):
@@ -35,7 +35,7 @@ class Controller:
         self.contacts_modification_search('delete')
 
     def contacts_modification_search(self, mod_type):
-        search_result = self.model.read(self.view.pb_input('What contact to {}?\n'.format(mod_type)))
+        search_result = self.model.read(*self.contact_elements())
         self.view.pb_output(search_result)
         if search_result != 'Nothing found.':
             self.contacts_modification_id(mod_type, search_result)
@@ -45,12 +45,13 @@ class Controller:
         self.contacts_modification(mod_type, selected_id)
 
     def contacts_modification(self, mod_type, selected_id):
-        if selected_id.isdigit() and mod_type == 'update':
-            first_name, last_name, phone_number = self.contact_elements()
-            self.view.pb_output(self.model.update(selected_id, first_name, last_name, phone_number))
-        elif selected_id.isdigit() and mod_type == 'delete':
-            self.view.pb_output(self.model.delete(selected_id))
-        else:
+        if isinstance(selected_id, int):
+            if mod_type == 'update':
+                first_name, last_name, phone_number = self.contact_elements()
+                self.view.pb_output(self.model.update(selected_id, first_name, last_name, phone_number))
+            elif mod_type == 'delete':
+                self.view.pb_output(self.model.delete(selected_id))
+        elif isinstance(selected_id, str):
             self.view.pb_output(selected_id)
 
     def contact_elements(self):
@@ -60,10 +61,10 @@ class Controller:
         return first_name, last_name, phone_number
 
     def save_txt(self):
-        self.view.pb_output(self.model.data_manager.save_file('txt'))
+        self.view.pb_output(self.model.data_manager.save_txt())
 
     def save_csv(self):
-        self.view.pb_output(self.model.data_manager.save_file('csv'))
+        self.view.pb_output(self.model.data_manager.save_csv())
 
     def exit_program(self):
         self.view.pb_output('Program is successfully closed. Have a nice day!')
@@ -76,18 +77,18 @@ class Controller:
             return self.view.pb_output(e)
 
     def local_session(self):
-        self.view.pb_output(check_database())
+        self.view.pb_output(self.model.data_manager.check_database())
         while True:
             command = self.view.pb_input('What do you want to do?\n1 - Create\n2 - Read\n3 - Update\n4 - Delete\n'
                                          '5 - Save as txt\n6 - Save as csv\n7 - Exit\n')
             self.do_actions(command)
 
     def network_session(self):
-        self.view.pb_output(check_database())
+        self.view.pb_output(self.model.data_manager.check_database())
         while True:
-            self.view.conn.sendall(b'What do you want to do?\n1 - Create\n2 - Read\n3 - Update\n4 - Delete\n'
-                                   b'5 - Save as txt\n6 - Save as csv\n7 - Exit\n')
-            query = self.view.conn.recv(1024)
+            self.view.pb_output(b'What do you want to do?\n1 - Create\n2 - Read\n3 - Update\n4 - Delete\n'
+                                b'5 - Save as txt\n6 - Save as csv\n7 - Exit\n')
+            query = self.view.recv_one()
             self.do_actions(query.decode('utf-8'))
 
 
