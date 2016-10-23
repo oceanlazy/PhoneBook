@@ -2,6 +2,10 @@ from collections import OrderedDict
 from pymongo import MongoClient
 
 
+def test():
+    print(123)
+
+
 class Model:
     STR_FORMAT = 'Name: {} {} Phone: {}'
     STR_ID_FORMAT = 'ID - {} Name: {} {} Phone: {}'
@@ -19,7 +23,7 @@ class Model:
                                                ('last_name', last_name), ('phone_number', phone_number)]))
         return 'Contact was successfully created.'
 
-    def read(self, first_name, last_name, phone_number):
+    def read(self, first_name='', last_name='', phone_number=''):
         if not (first_name or last_name or phone_number):
             res = self.database_conn.find()
         else:
@@ -28,6 +32,8 @@ class Model:
         return list(res) if res.count() > 0 else 'Nothing found.'
 
     def update(self, _id, first_name, last_name, phone_number):
+        if not isinstance(_id, int) or self.database_conn.find({"_id": _id}).count() == 0:
+            return 'Wrong ID.'
         if self.check_fields(first_name, last_name, phone_number):
             return self.check_fields(first_name, last_name, phone_number)
         self.database_conn.update_one({'_id': int(_id)}, {'$set': {'first_name': first_name,
@@ -56,15 +62,18 @@ class Model:
             return 'Phone number must be an integer.'
 
     def create_id(self):
-        return [x['_id'] for x in list(self.database_conn.find())].pop() + 1
+        try:
+            return [x['_id'] for x in list(self.database_conn.find())].pop() + 1
+        except IndexError:
+            return 1
 
     @staticmethod
-    def select_id(chose_id, res):
-        get_ids = [x['_id'] for x in res]
-        if int(chose_id) in get_ids:
-            return int(chose_id)
+    def select_id(selected_id, search_res):
+        get_ids = [x['_id'] for x in search_res]
+        if int(selected_id) in get_ids:
+            return int(selected_id)
         else:
-            return 'ID "{}" is not in the search result.'.format(chose_id)
+            return 'ID "{}" is not in the search result.'.format(selected_id)
 
     def get_csv_str_format(self):
         res = 'First name;Last name;Phone number\n'
