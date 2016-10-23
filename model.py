@@ -2,10 +2,6 @@ from collections import OrderedDict
 from pymongo import MongoClient
 
 
-def test():
-    print(123)
-
-
 class Model:
     STR_FORMAT = 'Name: {} {} Phone: {}'
     STR_ID_FORMAT = 'ID - {} Name: {} {} Phone: {}'

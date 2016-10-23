@@ -27,7 +27,7 @@ def create():
         res = model.create(request.form.get('first_name'), request.form.get('last_name'),
                            request.form.get('phone_number'))
         if 'successfully' in res:
-            return index(res)
+            return index(res)  # TODO redirect cookies
     return render_template('fields.html', action_name=act_name, action_desc=act_desc, input_id=format_input_id,
                            contact_fields=format_input_contacts, alert=res)
 
