@@ -1,6 +1,6 @@
 from model import Model
 from view import LocalView, NetworkView
-from data_manager import LocalDataManager, NetworkDataManager
+from data_manager import LocalDataManager, SocketDataManager
 
 
 class Controller:
@@ -97,6 +97,6 @@ if __name__ == '__main__':
     controller.local_session()
 
 
-def main_network(conn):
-    n_controller = Controller(Model(NetworkDataManager(conn)), NetworkView(conn))
+def main_socket(conn):
+    n_controller = Controller(Model(SocketDataManager(conn)), NetworkView(conn))
     n_controller.network_session()

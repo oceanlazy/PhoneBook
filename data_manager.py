@@ -49,7 +49,7 @@ class LocalDataManager:
             return 'Database is successfully loaded.'
 
 
-class NetworkDataManager(LocalDataManager):
+class SocketDataManager(LocalDataManager):
     def __init__(self, _conn):
         LocalDataManager.__init__(self)
         self.file_name = 'phone_book_%s.{}' % str(threading.current_thread().ident)

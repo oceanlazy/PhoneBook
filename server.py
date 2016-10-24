@@ -9,5 +9,5 @@ print('Server waiting')
 while True:
     conn, adr = sock.accept()
     print('Connected: {}'.format(adr))
-    t = threading.Thread(target=controller.main_network, args=(conn,))
+    t = threading.Thread(target=controller.main_socket, args=(conn,))
     t.start()
