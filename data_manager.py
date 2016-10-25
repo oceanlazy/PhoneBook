@@ -39,9 +39,9 @@ class LocalDataManager:
 
     def check_database(self):
         base_data = (
-            OrderedDict([("_id", 1), ('first_name', 'Arnold'), ('last_name', 'Schwarzenegger'), ('phone_number', '0101')]),
-            OrderedDict([("_id", 2), ('first_name', 'Bruce'), ('last_name', 'Willis'), ('phone_number', '102')]),
-            OrderedDict([("_id", 8), ('first_name', 'Sylvester'), ('last_name', 'Stallone'), ('phone_number', '102')]))
+            OrderedDict([("_id", 1), ('first_name', 'Vadim'), ('last_name', 'Kuznetsov'), ('phone_number', '0101')]),
+            OrderedDict([("_id", 2), ('first_name', 'Ivan'), ('last_name', 'Petrov'), ('phone_number', '102')]),
+            OrderedDict([("_id", 8), ('first_name', 'Petr'), ('last_name', 'Ivanovich'), ('phone_number', '102')]))
         if 'contacts' not in self.database_conn.collection_names():
             self.database_conn.contacts.insert(base_data)
             return 'Database is successfully created.'
